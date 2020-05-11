@@ -142,12 +142,13 @@ class Solver():
 		Unit propagation
 		PureLiteralRule
 		Selection of variable, check heuristics
+		Not always asign variable to 0?
 		Recursive?
 		"""
 		#global curr_sol # For signal
 		#signal.alarm(1) # Call receive_alarm in 1 seconds
 		curr_sol = Interpretation(self.cnf.num_vars)
-		var = 1
+		var = 1 # None - 0 - 1
 		while var > 0:
 			if curr_sol.vars[var] == 1: # Backtrack
 				curr_sol.vars[var] = None
@@ -158,7 +159,7 @@ class Solver():
 			else: # Extend right branch
 				curr_sol.vars[var] = 1
 			if curr_sol.cost() == 0: # Undet or SAT
-				if var == self.cnf.num_vars: # SAT
+				if var == self.cnf.num_vars: # SAT 
 					return curr_sol
 				else: # Undet
 					var = var + 1
