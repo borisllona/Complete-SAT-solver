@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
-
+from __future__ import annotations
 # Libraries
 
 import sys
@@ -50,21 +50,31 @@ class CNF():
     def pure_literal(self):
         not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
 
-    def unit_propagation(self):
-        unit_clauses = filter(lambda x: len(x) == 1, self.clauses)
-        for l in unit_clauses:
-            self.remove_clauses(l)
-            self.remove_literal(-l)
+    def unit_propagation(self) -> Interpretation:
+        inter_vars = [None] * (self.num_vars + 1)
+        unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+        while len(unit_clauses) != 0:
+            for l in unit_clauses:
+                if l > 0:
+                    inter_vars[abs(l)] = 1
+                else:
+                    inter_vars[abs(l)] = 0
+                self.remove_clauses(l)
+                self.remove_literal(-l)
+            print(inter_vars)
+            print(self.clauses)
+            unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+
+        return Interpretation(self.num_vars, inter_vars)
 
     def remove_clauses(self, literal):
-        for c in self.dictionary(literal):
-            self.clauses[c] = []
-            self.interpretation = []
+        for c in self.dictionary[literal]:
+            self.clauses[c-1] = []
 
     def remove_literal(self, literal):
-
-
-
+        clauses = self.dictionary[literal]
+        for c in clauses:
+            self.clauses[c-1].remove(literal)
 
     def read_cnf_file(self, cnf_file_name):
         instance = open(cnf_file_name, "r")
@@ -75,30 +85,30 @@ class CNF():
                 sl = l.split()
                 self.num_vars = int(sl[2])
                 self.num_clauses = int(sl[3])
-                self.unique_sign = [[v+1, 0] for v in range(self.num_vars)]
+                self.unique_sign = [[v + 1, 0] for v in range(self.num_vars)]
                 self.dictionary = [[] for _ in range(self.num_vars * 2 + 1)]
                 continue
             if l.strip() == "":
                 continue
             sl = list(map(int, l.split()))
-            self.get_sign(sl)
             sl.pop()  # Remove last 0
+            self.get_sign(sl)
             self.clauses.append(sl)
 
     def get_sign(self, sl):
         for i in sl:
             self.dictionary[i].append(len(self.clauses) + 1)
-            num_lit, found = self.unique_sign[abs(i)-1]
+            num_lit, found = self.unique_sign[abs(i) - 1]
             if found is None:
                 continue
             if found == 0:
                 if i > 0:
-                    self.unique_sign[abs(i)-1][1] += 1
+                    self.unique_sign[abs(i) - 1][1] += 1
                 elif i < 0:
-                    self.unique_sign[abs(i)-1][1] -= 1
+                    self.unique_sign[abs(i) - 1][1] -= 1
                 continue
             if i > 0 > found or found > 0 > i:
-                self.unique_sign[abs(i)-1][1] = None
+                self.unique_sign[abs(i) - 1][1] = None
 
     def show(self):
         """Prints the formula to the stdout"""
@@ -112,13 +122,13 @@ class CNF():
 class Interpretation():
     """An interpretation is an assignment of the possible values to variables"""
 
-    def __init__(self, num_vars):
+    def __init__(self, num_vars, vars):
         """
         Initialization
         TODO
         """
         self.num_vars = num_vars
-        self.vars = [None] * (self.num_vars + 1)
+        self.vars = vars  # [None] * (self.num_vars + 1)
 
     def cost(self):
         cost = 0
@@ -159,7 +169,7 @@ class Solver():
         Initialization
         TODO
         """
-        self.cnf = cnf
+        self.cnf: CNF = cnf
         self.best_sol = None
         self.best_cost = cnf.num_clauses + 1
 
@@ -172,9 +182,8 @@ class Solver():
         Not always asign variable to 0?
         Recursive?
         """
-
-        curr_sol = Interpretation(self.cnf.num_vars)
-        self.cnf
+        curr_sol = self.cnf.unit_propagation()
+        print(curr_sol.vars)
         var = 1  # None - 0 - 1
         while var > 0:
             if curr_sol.vars[var] == 1:  # Backtrack
@@ -192,7 +201,7 @@ class Solver():
                     var = var + 1
         return curr_sol
 
-    #def unit_propagation():
+    # def unit_propagation():
 
 
 # Main
