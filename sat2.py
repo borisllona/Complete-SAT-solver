@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #######################################################################
 # Copyright 2016 Josep Argelich
 
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #######################################################################
-from __future__ import annotations
+
 # Libraries
 
 import sys
@@ -23,11 +23,30 @@ import os
 import random
 import signal
 import time
-from functools import reduce
+
+
+# Functions
+from typing import List, Tuple
+
+
+def receive_alarm(signum, stack):
+    pc = 0
+    pcv = 50.0
+    for v in curr_sol.vars[1:16]:
+        if v == None:
+            break
+        elif v == 1:
+            pc += pcv
+        pcv = pcv / 2
+    sys.stdout.write('\rc Searching %0.2f%%...' % pc)
+    sys.stdout.flush()
+    signal.alarm(3)
+
+
+signal.signal(signal.SIGALRM, receive_alarm)
+
 
 # Classes
-from typing import Optional, List, Tuple
-
 
 class CNF():
     """A CNF formula """
@@ -40,39 +59,12 @@ class CNF():
         clause_length: Length of the clauses
         clauses: List of clauses
         """
-        self.unique_sign: List[Optional[int]] = []
         self.num_vars = None
         self.num_clauses = None
         self.clauses = []
-        self.dictionary = []
+        self.unique_sign: List[Tuple[int, int]] = []
         self.read_cnf_file(cnf_file_name)
-        self.pure_literal()
-
-    def pure_literal(self):
-        not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
-
-    def unit_propagation(self) -> Tuple[Interpretation, List[int]]:
-        unit_lit = [None] * (self.num_vars + 1)
-        print(self.clauses)
-        unit_clauses = [x[0] for x in self.clauses if len(x) == 1]
-        while len(unit_clauses) != 0:
-            for l in unit_clauses:
-                unit_lit[abs(l)] = l > 0 # True if it is positive, false if it is negative
-                self.remove_clauses(l)
-                self.remove_literal(-l)
-            unit_clauses = [x[0] for x in self.clauses if len(x) == 1]
-        print(self.clauses)
-        return Interpretation(self.num_vars), unit_lit
-
-    def remove_clauses(self, literal):
-        for c in self.dictionary[literal]:
-            self.clauses[c-1] = [literal]
-
-    def remove_literal(self, literal):
-        clauses = self.dictionary[literal]
-        print(literal, clauses)
-        for c in clauses:
-            self.clauses[c - 1].remove(literal)
+        self.uniques = map(lambda x: x[0], filter(lambda x: x[1] is None, self.unique_sign))
 
     def read_cnf_file(self, cnf_file_name):
         instance = open(cnf_file_name, "r")
@@ -83,8 +75,8 @@ class CNF():
                 sl = l.split()
                 self.num_vars = int(sl[2])
                 self.num_clauses = int(sl[3])
-                self.unique_sign = [[v + 1, 0] for v in range(self.num_vars)]
-                self.dictionary = [[] for _ in range(self.num_vars * 2 + 1)]
+                self.unique_sign = [[v + 1, 0] for v in
+                                    range(self.num_vars)]  # lit, 0 if not changed, otherwise changed
                 continue
             if l.strip() == "":
                 continue
@@ -95,7 +87,6 @@ class CNF():
 
     def get_sign(self, sl):
         for i in sl:
-            self.dictionary[i].append(len(self.clauses) + 1)
             num_lit, found = self.unique_sign[abs(i) - 1]
             if found is None:
                 continue
@@ -133,12 +124,12 @@ class Interpretation():
         for c in cnf.clauses:
             length = len(c)
             for l in c:
-                if self.vars[abs(l)] == None or (l < 0 and self.vars[abs(l)] == 0) or (
+                if self.vars[abs(l)] is None or (l < 0 and self.vars[abs(l)] == 0) or (
                         l > 0 and self.vars[abs(l)] == 1):  # Undef or Satisfies clause
                     break
                 else:
                     length -= 1
-            if length == 0:  # If all the literals al falsified, clause falsified
+            if length == 0:  # Falsified clause
                 cost += 1
         return cost
 
@@ -167,29 +158,25 @@ class Solver():
         Initialization
         TODO
         """
-        self.cnf: CNF = cnf
+        self.cnf = cnf
         self.best_sol = None
         self.best_cost = cnf.num_clauses + 1
 
     def solve(self):
         """
         Implements an algorithm to solve the instance of a problem
-        TODO:
-        PureLiteralRule
-        Selection of variable, check heuristics
-        Not always asign variable to 0?
-        Recursive?
         """
-        curr_sol, unit_lit = self.cnf.unit_propagation()
-        print(curr_sol.vars)
-        print(unit_lit)
-        var = 1  # None - 0 - 1
+        global curr_sol  # For signal
+        signal.alarm(1)  # Call receive_alarm in 1 seconds
+        curr_sol = Interpretation(self.cnf.num_vars)
+        print(list(cnf.uniques))
+        var = 1
         while var > 0:
             if curr_sol.vars[var] == 1:  # Backtrack
                 curr_sol.vars[var] = None
                 var = var - 1
                 continue
-            if curr_sol.vars[var] == None:  # Extend left branch
+            if curr_sol.vars[var] is None:  # Extend left branch
                 curr_sol.vars[var] = 0
             else:  # Extend right branch
                 curr_sol.vars[var] = 1
@@ -199,8 +186,6 @@ class Solver():
                 else:  # Undet
                     var = var + 1
         return curr_sol
-
-    # def unit_propagation():
 
 
 # Main
