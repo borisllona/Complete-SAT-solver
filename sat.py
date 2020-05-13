@@ -24,23 +24,6 @@ import random
 import signal
 import time
 
-# Functions
-
-def receive_alarm(signum, stack):
-	pc = 0
-	pcv = 50.0
-	for v in curr_sol.vars[1:16]:
-		if v == None:
-			break
-		elif v == 1:
-			pc += pcv
-		pcv = pcv / 2
-	sys.stdout.write('\rc Searching %0.2f%%...' % pc)
-	sys.stdout.flush()
-	signal.alarm(3)
-
-signal.signal(signal.SIGALRM, receive_alarm)
-
 # Classes 
 
 class CNF():
@@ -68,12 +51,22 @@ class CNF():
 				sl = l.split()
 				self.num_vars = int(sl[2])
 				self.num_clauses = int(sl[3])
+				self.unique_sign = [0 for _ in range(self.num_vars)]
 				continue
 			if l.strip() == "":
 				continue
-			sl = map(int, l.split())
+			sl = list(map(int, l.split()))
+			self.get_sign(sl)
 			sl.pop() # Remove last 0
 			self.clauses.append(sl)
+
+	def get_sign(self, sl):
+		for i in sl:
+			if i==0: self.unique_sign[i]
+			
+			si es 0 li pots sumar restar
+			si es 1 i has de restar l'has de ficar a none	
+
 
 	def show(self):
 		"""Prints the formula to the stdout"""
@@ -139,14 +132,12 @@ class Solver():
 		"""
 		Implements an algorithm to solve the instance of a problem
 		TODO:
-		Unit propagation
 		PureLiteralRule
 		Selection of variable, check heuristics
 		Not always asign variable to 0?
 		Recursive?
 		"""
-		#global curr_sol # For signal
-		#signal.alarm(1) # Call receive_alarm in 1 seconds
+		
 		curr_sol = Interpretation(self.cnf.num_vars)
 		var = 1 # None - 0 - 1
 		while var > 0:
@@ -164,6 +155,10 @@ class Solver():
 				else: # Undet
 					var = var + 1
 		return curr_sol
+
+	def unitPropagation():
+		
+
 
 # Main
 
