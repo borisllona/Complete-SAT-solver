@@ -1,6 +1,8 @@
 c Random CNF formula
-p cnf 3 4
+p cnf 10 6
 1 0
--2 0
-3 0
--3 0
+-1 -2 4 0
+1 3 0
+-1 3 0
+8 9 0
+-9 0
