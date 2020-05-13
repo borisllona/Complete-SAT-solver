@@ -39,10 +39,15 @@ class CNF():
         clause_length: Length of the clauses
         clauses: List of clauses
         """
+        self.unique_sign: List[Optional[int]] = []
         self.num_vars = None
         self.num_clauses = None
         self.clauses = []
         self.read_cnf_file(cnf_file_name)
+
+    def unit_propagation(self):
+        not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
+
 
     def read_cnf_file(self, cnf_file_name):
         instance = open(cnf_file_name, "r")
@@ -53,7 +58,7 @@ class CNF():
                 sl = l.split()
                 self.num_vars = int(sl[2])
                 self.num_clauses = int(sl[3])
-                self.unique_sign: List[Optional[int]] = [0 for _ in range(self.num_vars)]
+                self.unique_sign = [(v, 0) for v in range(self.num_vars)]
                 continue
             if l.strip() == "":
                 continue
@@ -64,7 +69,7 @@ class CNF():
 
     def get_sign(self, sl):
         for i in sl:
-            found = self.unique_sign[abs(i)]
+            num_lit, found = self.unique_sign[abs(i)]
             if found == 0:
                 if i > 0:
                     self.unique_sign[abs(i)] += 1
@@ -165,7 +170,7 @@ class Solver():
                     var = var + 1
         return curr_sol
 
-    def unitPropagation():
+    def unit_propagation():
 
 
 # Main
