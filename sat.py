@@ -24,163 +24,171 @@ import random
 import signal
 import time
 
-# Classes 
+# Classes
+from typing import Optional, List
+
 
 class CNF():
-	"""A CNF formula """
+    """A CNF formula """
 
-	def __init__(self, cnf_file_name):
-		"""
-		Initialization
-		num_vars: Number of variables
-		num_clauses: Number of clauses
-		clause_length: Length of the clauses
-		clauses: List of clauses
-		"""
-		self.num_vars = None
-		self.num_clauses = None
-		self.clauses = []
-		self.read_cnf_file(cnf_file_name)
+    def __init__(self, cnf_file_name):
+        """
+        Initialization
+        num_vars: Number of variables
+        num_clauses: Number of clauses
+        clause_length: Length of the clauses
+        clauses: List of clauses
+        """
+        self.num_vars = None
+        self.num_clauses = None
+        self.clauses = []
+        self.read_cnf_file(cnf_file_name)
 
-	def read_cnf_file(self, cnf_file_name):
-		instance = open(cnf_file_name, "r")
-		for l in instance:
-			if l[0] == "c":
-				continue
-			if l[0] == "p":
-				sl = l.split()
-				self.num_vars = int(sl[2])
-				self.num_clauses = int(sl[3])
-				self.unique_sign = [0 for _ in range(self.num_vars)]
-				continue
-			if l.strip() == "":
-				continue
-			sl = list(map(int, l.split()))
-			self.get_sign(sl)
-			sl.pop() # Remove last 0
-			self.clauses.append(sl)
+    def read_cnf_file(self, cnf_file_name):
+        instance = open(cnf_file_name, "r")
+        for l in instance:
+            if l[0] == "c":
+                continue
+            if l[0] == "p":
+                sl = l.split()
+                self.num_vars = int(sl[2])
+                self.num_clauses = int(sl[3])
+                self.unique_sign: List[Optional[int]] = [0 for _ in range(self.num_vars)]
+                continue
+            if l.strip() == "":
+                continue
+            sl = list(map(int, l.split()))
+            self.get_sign(sl)
+            sl.pop()  # Remove last 0
+            self.clauses.append(sl)
 
-	def get_sign(self, sl):
-		for i in sl:
-			if i==0: self.unique_sign[i]
-			
-			si es 0 li pots sumar restar
-			si es 1 i has de restar l'has de ficar a none	
+    def get_sign(self, sl):
+        for i in sl:
+            found = self.unique_sign[abs(i)]
+            if found == 0:
+                if i > 0:
+                    self.unique_sign[abs(i)] += 1
+                elif i < 0:
+                    self.unique_sign[abs(i)] -= 1
+                continue
+            if i > 0 > found or found > 0 > i:
+                self.unique_sign[abs(i)] = None
 
+    def show(self):
+        """Prints the formula to the stdout"""
 
-	def show(self):
-		"""Prints the formula to the stdout"""
+        sys.stdout.write("c Random CNF formula\n")
+        sys.stdout.write("p cnf %d %d\n" % (self.num_vars, self.num_clauses))
+        for c in self.clauses:
+            sys.stdout.write("%s 0\n" % " ".join(map(str, c)))
 
-		sys.stdout.write("c Random CNF formula\n")
-		sys.stdout.write("p cnf %d %d\n" % (self.num_vars, self.num_clauses))
-		for c in self.clauses:
-			sys.stdout.write("%s 0\n" % " ".join(map(str, c)))
 
 class Interpretation():
-	"""An interpretation is an assignment of the possible values to variables"""
+    """An interpretation is an assignment of the possible values to variables"""
 
-	def __init__(self, num_vars):
-		"""
-		Initialization
-		TODO
-		"""
-		self.num_vars = num_vars
-		self.vars = [None] * (self.num_vars + 1)
+    def __init__(self, num_vars):
+        """
+        Initialization
+        TODO
+        """
+        self.num_vars = num_vars
+        self.vars = [None] * (self.num_vars + 1)
 
-	def cost(self):
-		cost = 0
-		for c in cnf.clauses:
-			length = len(c)
-			for l in c:
-				if self.vars[abs(l)] == None or (l < 0 and self.vars[abs(l)] == 0) or (l > 0 and self.vars[abs(l)] == 1): # Undef or Satisfies clause
-					break
-				else:
-					length -= 1
-			if length == 0: # If all the literals al falsified, clause falsified
-				cost += 1
-		return cost
+    def cost(self):
+        cost = 0
+        for c in cnf.clauses:
+            length = len(c)
+            for l in c:
+                if self.vars[abs(l)] == None or (l < 0 and self.vars[abs(l)] == 0) or (
+                        l > 0 and self.vars[abs(l)] == 1):  # Undef or Satisfies clause
+                    break
+                else:
+                    length -= 1
+            if length == 0:  # If all the literals al falsified, clause falsified
+                cost += 1
+        return cost
 
-	def copy(self):
-		new = Interpretation(self.num_vars)
-		new.vars = list(self.vars)
-		return new
+    def copy(self):
+        new = Interpretation(self.num_vars)
+        new.vars = list(self.vars)
+        return new
 
-	def show(self):
-		if self.vars[self.num_vars] == None:
-			sys.stdout.write('\ns UNSATISFIABLE\n')
-		else:
-			sys.stdout.write('\ns SATISFIABLE\nv ')
-			for v, s in enumerate(self.vars[1:]):
-				if not s:
-					sys.stdout.write('-')
-				sys.stdout.write('%i ' % (v + 1))
-			sys.stdout.write('0\n')
+    def show(self):
+        if self.vars[self.num_vars] == None:
+            sys.stdout.write('\ns UNSATISFIABLE\n')
+        else:
+            sys.stdout.write('\ns SATISFIABLE\nv ')
+            for v, s in enumerate(self.vars[1:]):
+                if not s:
+                    sys.stdout.write('-')
+                sys.stdout.write('%i ' % (v + 1))
+            sys.stdout.write('0\n')
+
 
 class Solver():
-	"""The class Solver implements an algorithm to solve a given problem instance"""
+    """The class Solver implements an algorithm to solve a given problem instance"""
 
-	def __init__(self, cnf):
-		"""
-		Initialization
-		TODO
-		"""
-		self.cnf = cnf
-		self.best_sol = None
-		self.best_cost = cnf.num_clauses + 1
+    def __init__(self, cnf):
+        """
+        Initialization
+        TODO
+        """
+        self.cnf = cnf
+        self.best_sol = None
+        self.best_cost = cnf.num_clauses + 1
 
-	def solve(self):
-		"""
-		Implements an algorithm to solve the instance of a problem
-		TODO:
-		PureLiteralRule
-		Selection of variable, check heuristics
-		Not always asign variable to 0?
-		Recursive?
-		"""
-		
-		curr_sol = Interpretation(self.cnf.num_vars)
-		var = 1 # None - 0 - 1
-		while var > 0:
-			if curr_sol.vars[var] == 1: # Backtrack
-				curr_sol.vars[var] = None
-				var = var - 1
-				continue
-			if curr_sol.vars[var] == None: # Extend left branch
-				curr_sol.vars[var] = 0
-			else: # Extend right branch
-				curr_sol.vars[var] = 1
-			if curr_sol.cost() == 0: # Undet or SAT
-				if var == self.cnf.num_vars: # SAT 
-					return curr_sol
-				else: # Undet
-					var = var + 1
-		return curr_sol
+    def solve(self):
+        """
+        Implements an algorithm to solve the instance of a problem
+        TODO:
+        PureLiteralRule
+        Selection of variable, check heuristics
+        Not always asign variable to 0?
+        Recursive?
+        """
 
-	def unitPropagation():
-		
+        curr_sol = Interpretation(self.cnf.num_vars)
+        var = 1  # None - 0 - 1
+        while var > 0:
+            if curr_sol.vars[var] == 1:  # Backtrack
+                curr_sol.vars[var] = None
+                var = var - 1
+                continue
+            if curr_sol.vars[var] == None:  # Extend left branch
+                curr_sol.vars[var] = 0
+            else:  # Extend right branch
+                curr_sol.vars[var] = 1
+            if curr_sol.cost() == 0:  # Undet or SAT
+                if var == self.cnf.num_vars:  # SAT
+                    return curr_sol
+                else:  # Undet
+                    var = var + 1
+        return curr_sol
+
+    def unitPropagation():
 
 
 # Main
 
-if __name__ == '__main__' :
-	"""
-	TODO
-	"""
+if __name__ == '__main__':
+    """
+    TODO
+    """
 
-	# Check parameters
-	if len(sys.argv) < 1 or len(sys.argv) > 2:
-		sys.exit("Use: %s <cnf_instance>" % sys.argv[0])
-	
-	if os.path.isfile(sys.argv[1]):
-		cnf_file_name = os.path.abspath(sys.argv[1])
-	else:
-		sys.exit("ERROR: CNF instance not found (%s)." % sys.argv[1])
+    # Check parameters
+    if len(sys.argv) < 1 or len(sys.argv) > 2:
+        sys.exit("Use: %s <cnf_instance>" % sys.argv[0])
 
-	# Read cnf instance
-	cnf = CNF(cnf_file_name)
-	# Create a solver instance with the problem to solve
-	solver = Solver(cnf)
-	# Solve the problem and get the best solution found
-	best_sol = solver.solve()
-	# Show the best solution found
-	best_sol.show()
+    if os.path.isfile(sys.argv[1]):
+        cnf_file_name = os.path.abspath(sys.argv[1])
+    else:
+        sys.exit("ERROR: CNF instance not found (%s)." % sys.argv[1])
+
+    # Read cnf instance
+    cnf = CNF(cnf_file_name)
+    # Create a solver instance with the problem to solve
+    solver = Solver(cnf)
+    # Solve the problem and get the best solution found
+    best_sol = solver.solve()
+    # Show the best solution found
+    best_sol.show()
