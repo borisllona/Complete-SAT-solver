@@ -43,10 +43,27 @@ class CNF():
         self.num_vars = None
         self.num_clauses = None
         self.clauses = []
+        self.dictionary = []
         self.read_cnf_file(cnf_file_name)
+        self.pure_literal()
+
+    def pure_literal(self):
+        not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
 
     def unit_propagation(self):
-        not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
+        unit_clauses = filter(lambda x: len(x) == 1, self.clauses)
+        for l in unit_clauses:
+            self.remove_clauses(l)
+            self.remove_literal(-l)
+
+    def remove_clauses(self, literal):
+        for c in self.dictionary(literal):
+            self.clauses[c] = []
+            self.interpretation = []
+
+    def remove_literal(self, literal):
+
+
 
 
     def read_cnf_file(self, cnf_file_name):
@@ -58,7 +75,8 @@ class CNF():
                 sl = l.split()
                 self.num_vars = int(sl[2])
                 self.num_clauses = int(sl[3])
-                self.unique_sign = [(v, 0) for v in range(self.num_vars)]
+                self.unique_sign = [[v+1, 0] for v in range(self.num_vars)]
+                self.dictionary = [[] for _ in range(self.num_vars * 2 + 1)]
                 continue
             if l.strip() == "":
                 continue
@@ -69,15 +87,18 @@ class CNF():
 
     def get_sign(self, sl):
         for i in sl:
-            num_lit, found = self.unique_sign[abs(i)]
+            self.dictionary[i].append(len(self.clauses) + 1)
+            num_lit, found = self.unique_sign[abs(i)-1]
+            if found is None:
+                continue
             if found == 0:
                 if i > 0:
-                    self.unique_sign[abs(i)] += 1
+                    self.unique_sign[abs(i)-1][1] += 1
                 elif i < 0:
-                    self.unique_sign[abs(i)] -= 1
+                    self.unique_sign[abs(i)-1][1] -= 1
                 continue
             if i > 0 > found or found > 0 > i:
-                self.unique_sign[abs(i)] = None
+                self.unique_sign[abs(i)-1][1] = None
 
     def show(self):
         """Prints the formula to the stdout"""
@@ -153,6 +174,7 @@ class Solver():
         """
 
         curr_sol = Interpretation(self.cnf.num_vars)
+        self.cnf
         var = 1  # None - 0 - 1
         while var > 0:
             if curr_sol.vars[var] == 1:  # Backtrack
@@ -170,7 +192,7 @@ class Solver():
                     var = var + 1
         return curr_sol
 
-    def unit_propagation():
+    #def unit_propagation():
 
 
 # Main
