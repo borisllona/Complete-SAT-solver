@@ -193,7 +193,10 @@ class Solver():
         """
         curr_sol = self.cnf.unit_propagation()
         num_order = len(self.cnf.unit_clauses)  # None - 0 - 1
-        order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8]
+        order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
+        for i in range(0,len(order)-1):
+            if order[i+1]-order[i] > 1: print(order[i]+1)
+        
         while num_order > 0:
             var = order[num_order]
             if curr_sol.vars[var] == 1:  # Backtrack
