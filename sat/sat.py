@@ -135,8 +135,6 @@ class Interpretation():
         """
         self.num_vars = num_vars
         self.vars = vars  # [None] * (self.num_vars + 1)
-        self.unit_clauses = unit_clauses
-        self.num_unit_clauses = len(unit_clauses)
 
     def cost(self):
         cost = 0
@@ -194,8 +192,8 @@ class Solver():
         Recursive?
         """
         curr_sol = self.cnf.unit_propagation()
-        num_order = 1  # None - 0 - 1
-        order = list(range(cnf.num_vars+1))
+        num_order = len(self.cnf.unit_clauses)  # None - 0 - 1
+        order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8]
         while num_order > 0:
             var = order[num_order]
             if curr_sol.vars[var] == 1:  # Backtrack
