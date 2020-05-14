@@ -53,27 +53,29 @@ class CNF():
     def unit_propagation(self) -> Interpretation:
         inter_vars = [None] * (self.num_vars + 1)
         unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
-        while len(unit_clauses) != 0:
-            for l in unit_clauses:
-                if l > 0:
-                    inter_vars[abs(l)] = 1
-                else:
-                    inter_vars[abs(l)] = 0
-                self.remove_clauses(l)
-                self.remove_literal(-l)
-            print(inter_vars)
-            print(self.clauses)
-            unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+        print(self.clauses)
+        for l in unit_clauses:
+            print("UNIT:", l)
+            if l > 0:
+                inter_vars[abs(l)] = 1
+            else:
+                inter_vars[abs(l)] = 0
+            self.remove_clauses(l)
+            self.remove_literal(-l)
+        print(inter_vars)
+        print(self.clauses)
 
-        return Interpretation(self.num_vars, inter_vars)
+        return Interpretation(self.num_vars, [None] * (self.num_vars + 1))
 
     def remove_clauses(self, literal):
         for c in self.dictionary[literal]:
-            self.clauses[c-1] = []
+            self.clauses[c-1] = [literal]
 
     def remove_literal(self, literal):
         clauses = self.dictionary[literal]
+        print(clauses, literal)
         for c in clauses:
+            print(self.clauses[c-1])
             self.clauses[c-1].remove(literal)
 
     def read_cnf_file(self, cnf_file_name):
