@@ -54,14 +54,27 @@ class CNF():
         inter_vars = [None] * (self.num_vars + 1)
         unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
         print(self.clauses)
-        for l in unit_clauses:
-            print("UNIT:", l)
-            if l > 0:
-                inter_vars[abs(l)] = 1
-            else:
-                inter_vars[abs(l)] = 0
-            self.remove_clauses(l)
-            self.remove_literal(-l)
+        unit_lits = 0
+        is_unit_lit = [False] * (self.num_vars + 1)
+        while unit_lits != len(unit_clauses):
+            unit_lits = 0
+            for l in unit_clauses:
+                print("UNIT LIT", l)
+                unit_lits += 1
+
+                if is_unit_lit[l]:
+                    continue
+                print("======> ", l)
+                if l > 0:
+                    inter_vars[abs(l)] = 1
+                else:
+                    inter_vars[abs(l)] = 0
+                self.remove_clauses(l)
+                self.remove_literal(-l)
+                is_unit_lit[l] = True
+            unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+            print(unit_lits, len(unit_clauses))
+            time.sleep(1)
         print(inter_vars)
         print(self.clauses)
 
