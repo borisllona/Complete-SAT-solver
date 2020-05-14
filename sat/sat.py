@@ -70,12 +70,12 @@ class CNF():
 
     def remove_clauses(self, literal):
         for c in self.dictionary[literal]:
-            self.clauses[c-1] = [literal]
+            self.clauses[c - 1] = [literal]
 
     def remove_literal(self, literal):
         clauses = self.dictionary[literal]
         for c in clauses:
-            self.clauses[c-1].remove(literal)
+            self.clauses[c - 1].remove(literal)
 
     def read_cnf_file(self, cnf_file_name):
         instance = open(cnf_file_name, "r")
@@ -169,6 +169,13 @@ class Interpretation():
     def unit_propagation(self):
         pass
 
+def coroutine(func):
+    def start(*args, **kwargs):
+        cr = func(*args, **kwargs)
+        cr.next()
+        return cr
+
+    return start
 
 class Solver():
     """The class Solver implements an algorithm to solve a given problem instance"""
@@ -182,6 +189,11 @@ class Solver():
         self.best_sol = None
         self.best_cost = cnf.num_clauses + 1
 
+    def get_last(self, order: List[int]):
+        for i in range(0, len(order) - 1):
+            if order[i + 1] - order[i] > 1:
+                yield order[i] + 1
+
     def solve(self):
         """
         Implements an algorithm to solve the instance of a problem
@@ -192,13 +204,15 @@ class Solver():
         Recursive?
         """
         curr_sol = self.cnf.unit_propagation()
-        num_order = len(self.cnf.unit_clauses)  # None - 0 - 1
-        order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
-        for i in range(0,len(order)-1):
-            if order[i+1]-order[i] > 1: print(order[i]+1)
-        
+        num_order = 1  # None - 0 - 1
+        order =[0] + self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
+        print(order)
+        for f in self.get_last(order):
+            order.append(f)
+        print(order)
         while num_order > 0:
             var = order[num_order]
+            print(num_order, ",", var, "===", curr_sol.vars[var])
             if curr_sol.vars[var] == 1:  # Backtrack
                 curr_sol.vars[var] = None
                 num_order = num_order - 1
@@ -212,6 +226,7 @@ class Solver():
                     return curr_sol
                 else:  # Undet
                     num_order = num_order + 1
+            time.sleep(1)
         return curr_sol
 
     # def unit_propagation():
