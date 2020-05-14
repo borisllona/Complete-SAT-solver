@@ -48,7 +48,7 @@ class CNF():
         self.pure_literal()
 
     def pure_literal(self):
-        not_nones = filter(lambda x: x[1] is not None, self.unique_sign)
+        return filter(lambda x: x[1] is not None, self.unique_sign)
 
     def unit_propagation(self) -> Interpretation:
         inter_vars = [None] * (self.num_vars + 1)
