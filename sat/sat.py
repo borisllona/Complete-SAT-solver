@@ -187,21 +187,23 @@ class Solver():
         Recursive?
         """
         curr_sol = self.cnf.unit_propagation()
-        var = 1  # None - 0 - 1
-        while var > 0:
+        num_order = 1  # None - 0 - 1
+        order = list(range(cnf.num_vars+1))
+        while num_order > 0:
+            var = order[num_order]
             if curr_sol.vars[var] == 1:  # Backtrack
                 curr_sol.vars[var] = None
-                var = var - 1
+                num_order = num_order - 1
                 continue
             if curr_sol.vars[var] == None:  # Extend left branch
                 curr_sol.vars[var] = 0
             else:  # Extend right branch
                 curr_sol.vars[var] = 1
             if curr_sol.cost() == 0:  # Undet or SAT
-                if var == self.cnf.num_vars:  # SAT
+                if num_order == self.cnf.num_vars:  # SAT
                     return curr_sol
                 else:  # Undet
-                    var = var + 1
+                    num_order = num_order + 1
         return curr_sol
 
     # def unit_propagation():
