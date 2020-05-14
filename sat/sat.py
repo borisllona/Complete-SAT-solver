@@ -23,9 +23,14 @@ import os
 import random
 import signal
 import time
+from collections import OrderedDict
 
 # Classes
 from typing import Optional, List
+
+
+def get_unrepeat_order(ls):
+    return list(OrderedDict.fromkeys(ls))
 
 
 class CNF():
@@ -65,7 +70,9 @@ class CNF():
                 self.remove_clauses(l)
                 self.remove_literal(-l)
                 is_unit_lit[l] = True
-            self.unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+            self.unit_clauses = get_unrepeat_order(
+                list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses))))
+        self.unit_clauses = list(map(lambda x: abs(x), self.unit_clauses))
         return Interpretation(self.num_vars, [None] * (self.num_vars + 1), self.unit_clauses)
 
     def remove_clauses(self, literal):
@@ -148,6 +155,7 @@ class Interpretation():
                     length -= 1
             if length == 0:  # If all the literals al falsified, clause falsified
                 cost += 1
+            print(c, "::", cost)
         return cost
 
     def copy(self):
@@ -169,6 +177,7 @@ class Interpretation():
     def unit_propagation(self):
         pass
 
+
 def coroutine(func):
     def start(*args, **kwargs):
         cr = func(*args, **kwargs)
@@ -176,6 +185,7 @@ def coroutine(func):
         return cr
 
     return start
+
 
 class Solver():
     """The class Solver implements an algorithm to solve a given problem instance"""
@@ -190,9 +200,13 @@ class Solver():
         self.best_cost = cnf.num_clauses + 1
 
     def get_last(self, order: List[int]):
-        for i in range(0, len(order) - 1):
-            if order[i + 1] - order[i] > 1:
-                yield order[i] + 1
+        for i in range(1, order[0]):
+            yield i
+        for p in range(0, len(order) - 1):
+            for i in range(order[p]+1, order[p+1]):
+                yield i
+        for i in range(order[-1] + 1, self.cnf.num_vars + 1):
+            yield i
 
     def solve(self):
         """
@@ -205,14 +219,12 @@ class Solver():
         """
         curr_sol = self.cnf.unit_propagation()
         num_order = 1  # None - 0 - 1
-        order =[0] + self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
-        print(order)
-        for f in self.get_last(order):
-            order.append(f)
+        order = self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
+        order = [0] + order + list(self.get_last(order))
+        print(self.cnf.clauses)
         print(order)
         while num_order > 0:
             var = order[num_order]
-            print(num_order, ",", var, "===", curr_sol.vars[var])
             if curr_sol.vars[var] == 1:  # Backtrack
                 curr_sol.vars[var] = None
                 num_order = num_order - 1
@@ -221,6 +233,7 @@ class Solver():
                 curr_sol.vars[var] = 0
             else:  # Extend right branch
                 curr_sol.vars[var] = 1
+            print(var, curr_sol.vars)
             if curr_sol.cost() == 0:  # Undet or SAT
                 if num_order == self.cnf.num_vars:  # SAT
                     return curr_sol
