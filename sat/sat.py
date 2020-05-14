@@ -44,6 +44,7 @@ class CNF():
         self.num_clauses = None
         self.clauses = []
         self.dictionary = []
+        self.unit_clauses = []
         self.read_cnf_file(cnf_file_name)
         self.pure_literal()
 
@@ -52,12 +53,11 @@ class CNF():
 
     def unit_propagation(self) -> Interpretation:
         inter_vars = [None] * (self.num_vars + 1)
-        unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
         unit_lits = 0
         is_unit_lit = [False] * (self.num_vars + 1)
-        while unit_lits != len(unit_clauses):
+        while unit_lits != len(self.unit_clauses):
             unit_lits = 0
-            for l in unit_clauses:
+            for l in self.unit_clauses:
                 unit_lits += 1
                 if is_unit_lit[l]:
                     continue
@@ -65,8 +65,8 @@ class CNF():
                 self.remove_clauses(l)
                 self.remove_literal(-l)
                 is_unit_lit[l] = True
-            unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
-        return Interpretation(self.num_vars, [None] * (self.num_vars + 1))
+            self.unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+        return Interpretation(self.num_vars, [None] * (self.num_vars + 1), self.unit_clauses)
 
     def remove_clauses(self, literal):
         for c in self.dictionary[literal]:
@@ -96,6 +96,8 @@ class CNF():
             if len(sl) == 0:
                 sys.stdout.write('\ns UNSATISFIABLE\n')
                 sys.exit()
+            elif len(sl) == 1:
+                self.unit_clauses.append(sl[0])
             self.get_sign(sl)
             self.clauses.append(sl)
 
@@ -126,13 +128,15 @@ class CNF():
 class Interpretation():
     """An interpretation is an assignment of the possible values to variables"""
 
-    def __init__(self, num_vars, vars):
+    def __init__(self, num_vars, vars, unit_clauses):
         """
         Initialization
         TODO
         """
         self.num_vars = num_vars
         self.vars = vars  # [None] * (self.num_vars + 1)
+        self.unit_clauses = unit_clauses
+        self.num_unit_clauses = len(unit_clauses)
 
     def cost(self):
         cost = 0
@@ -163,6 +167,9 @@ class Interpretation():
                     sys.stdout.write('-')
                 sys.stdout.write('%i ' % (v + 1))
             sys.stdout.write('0\n')
+
+    def unit_propagation(self):
+        pass
 
 
 class Solver():
