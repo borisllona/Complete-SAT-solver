@@ -93,6 +93,9 @@ class CNF():
                 continue
             sl = list(map(int, l.split()))
             sl.pop()  # Remove last 0
+            if len(sl) == 0:
+                sys.stdout.write('\ns UNSATISFIABLE\n')
+                sys.exit()
             self.get_sign(sl)
             self.clauses.append(sl)
 
