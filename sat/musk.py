@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+from functools import lru_cache
 
 
 def parse(filename):
@@ -66,7 +67,7 @@ def backtracking(formula, assignment, unit=None):
     if not formula:
         return assignment
 
-    variable = jeroslow_wang_2_sided(formula)
+    variable = solver_satz(formula)
     solution = backtracking(bcp(formula, variable), assignment + [variable])
     if not solution:
         solution = backtracking(bcp(formula, -variable), assignment + [-variable])
@@ -79,7 +80,33 @@ def jeroslow_wang_2_sided(formula):
     return max(counter, key=counter.get)
 
 
-# Main
+def get_weighted_counter(formula, weight=2):
+    counter = {}
+    occs = {}
+    for clause in formula:
+        for literal in clause:
+            if literal in counter:
+                counter[literal] += weight ** -len(clause)
+                occs[literal] += 1
+            else:
+                counter[literal] = weight ** -len(clause)
+                occs[literal] = 1
+    return counter, occs
+
+
+@lru_cache()
+def w(occ, count):
+    return occ * count
+
+
+def solver_satz(formula):
+    counter, occs = get_weighted_counter(formula)
+    h = {}
+    for i in counter.keys():
+        h[i] = w(occs[i], counter[i]) * w(occs[-i], counter[-i]) * 2 ** 10 + w(occs[i], counter[i]) + w(occs[-i],
+                                                                                                      counter[-i])
+    return max(h, key=h.get)
+
 
 def main():
     clauses, n_vars, unit = parse(sys.argv[1])
