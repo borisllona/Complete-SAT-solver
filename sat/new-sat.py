@@ -1,37 +1,9 @@
-#!/usr/bin/python
-#######################################################################
-# Copyright 2016 Josep Argelich
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#######################################################################
-from __future__ import annotations
-# Libraries
-
-import sys
 import os
-import random
-import signal
-import time
-from collections import OrderedDict
-
-# Classes
+import sys
 from typing import Optional, List
 
 
 class CNF():
-    """A CNF formula """
-
     def __init__(self, cnf_file_name):
         """
         Initialization
@@ -66,7 +38,7 @@ class CNF():
                 self.remove_clauses(l)
                 self.remove_literal(-l)
                 is_unit_lit[l] = True
-            self.unit_clauses = get_unrepeat_order(
+            self.unit_clauses = self.get_unrepeat_order(
                 list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses))))
         self.unit_clauses = list(map(lambda x: abs(x), self.unit_clauses))
         return Interpretation(self.num_vars, [None] * (self.num_vars + 1), self.unit_clauses)
@@ -129,6 +101,7 @@ class CNF():
 
     @staticmethod
     def get_unrepeat_order(ls):
+        from collections import OrderedDict
         return list(OrderedDict.fromkeys(ls))
 
     def __str__(self):
@@ -152,7 +125,7 @@ class Interpretation():
         for c in self.cnf.clauses:
             length = len(c)
             for l in c:
-                if self.vars[abs(l)] == None or (l < 0 and self.vars[abs(l)] == 0) or (
+                if self.vars[abs(l)] is None or (l < 0 and self.vars[abs(l)] == 0) or (
                         l > 0 and self.vars[abs(l)] == 1):  # Undef or Satisfies clause
                     break
                 else:
@@ -178,18 +151,6 @@ class Interpretation():
                 sys.stdout.write('%i ' % (v + 1))
             sys.stdout.write('0\n')
 
-    def unit_propagation(self):
-        pass
-
-
-def coroutine(func):
-    def start(*args, **kwargs):
-        cr = func(*args, **kwargs)
-        cr.next()
-        return cr
-
-    return start
-
 
 class Solver():
     """The class Solver implements an algorithm to solve a given problem instance"""
@@ -203,55 +164,12 @@ class Solver():
         self.best_sol = None
         self.best_cost = cnf.num_clauses + 1
 
-    def get_last(self, order: List[int]):
-        for i in range(1, order[0]):
-            yield i
-        for p in range(0, len(order) - 1):
-            for i in range(order[p] + 1, order[p + 1]):
-                yield i
-        for i in range(order[-1] + 1, self.cnf.num_vars + 1):
-            yield i
-
     def solve(self):
-        """
-        Implements an algorithm to solve the instance of a problem
-        TODO:
-        PureLiteralRule
-        Selection of variable, check heuristics
-        Not always asign variable to 0?
-        Recursive?
-        """
         curr_sol = self.cnf.unit_propagation()
-        curr_sol.cnf = self.cnf
-        num_order = 1  # None - 0 - 1
-        order = self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
-        order = [0] + order + list(self.get_last(order))
-        print(self.cnf.clauses)
-        print(order)
-        while num_order > 0:
-            var = order[num_order]
-            if curr_sol.vars[var] == 1:  # Backtrack
-                curr_sol.vars[var] = None
-                num_order = num_order - 1
-                continue
-            if curr_sol.vars[var] == None:  # Extend left branch
-                curr_sol.vars[var] = 0
-            else:  # Extend right branch
-                curr_sol.vars[var] = 1
-            print(var, curr_sol.vars)
-            if curr_sol.cost() == 0:  # Undet or SAT
-                if num_order == self.cnf.num_vars:  # SAT
-                    return curr_sol
-                else:  # Undet
-                    num_order = num_order + 1
-            time.sleep(1)
-        return curr_sol
-
-    # def unit_propagation():
 
 
-# Main
 def main():
+    # Check parameters
     if len(sys.argv) < 1 or len(sys.argv) > 2:
         sys.exit("Use: %s <cnf_instance>" % sys.argv[0])
 
@@ -262,7 +180,6 @@ def main():
 
     # Read cnf instance
     cnf = CNF(cnf_file_name)
-    print(cnf)
     # Create a solver instance with the problem to solve
     solver = Solver(cnf)
     # Solve the problem and get the best solution found
@@ -270,7 +187,5 @@ def main():
     # Show the best solution found
     best_sol.show()
 
-
 if __name__ == '__main__':
-    # Check parameters
     main()
