@@ -13,7 +13,7 @@ def parse(filename):
             continue
         clause = [int(x) for x in line[:-2].split()]
         if len(clause) == 1:
-            unit_clauses.append(clause[0])
+            unit_clauses.append(clause)
         clauses.append(clause)
     return clauses, int(n_vars), unit_clauses
 
