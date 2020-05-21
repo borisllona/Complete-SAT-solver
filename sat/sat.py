@@ -159,7 +159,6 @@ class Interpretation():
                     length -= 1
             if length == 0:  # If all the literals al falsified, clause falsified
                 cost += 1
-            print(c, f'{True if cost != 0 else False}')
         return cost
 
     def copy(self):
@@ -225,7 +224,11 @@ class Solver():
         curr_sol.cnf = self.cnf
         num_order = 1  # None - 0 - 1
         order = self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
-        order = [0] + order + list(self.get_last(order))
+        if order:
+            order = [0] + order + list(self.get_last(order))
+        else:
+            order = list(range(self.cnf.num_vars))
+        print(order)
         print(self.cnf.clauses)
         print(order)
         while num_order > 0:
@@ -238,13 +241,11 @@ class Solver():
                 curr_sol.vars[var] = 0
             else:  # Extend right branch
                 curr_sol.vars[var] = 1
-            print(var, curr_sol.vars)
             if curr_sol.cost() == 0:  # Undet or SAT
                 if num_order == self.cnf.num_vars:  # SAT
                     return curr_sol
                 else:  # Undet
                     num_order = num_order + 1
-            time.sleep(1)
         return curr_sol
 
     # def unit_propagation():
