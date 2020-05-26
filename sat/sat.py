@@ -23,6 +23,7 @@ import os
 import random
 import signal
 import time
+from collections import OrderedDict
 
 # Classes
 from typing import Optional, List
@@ -65,17 +66,19 @@ class CNF():
                 self.remove_clauses(l)
                 self.remove_literal(-l)
                 is_unit_lit[l] = True
-            self.unit_clauses = list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses)))
+            self.unit_clauses = get_unrepeat_order(
+                list(map(lambda x: x[0], filter(lambda x: len(x) == 1, self.clauses))))
+        self.unit_clauses = list(map(lambda x: abs(x), self.unit_clauses))
         return Interpretation(self.num_vars, [None] * (self.num_vars + 1), self.unit_clauses)
 
     def remove_clauses(self, literal):
         for c in self.dictionary[literal]:
-            self.clauses[c-1] = [literal]
+            self.clauses[c - 1] = [literal]
 
     def remove_literal(self, literal):
         clauses = self.dictionary[literal]
         for c in clauses:
-            self.clauses[c-1].remove(literal)
+            self.clauses[c - 1].remove(literal)
 
     def read_cnf_file(self, cnf_file_name):
         instance = open(cnf_file_name, "r")
@@ -124,21 +127,29 @@ class CNF():
         for c in self.clauses:
             sys.stdout.write("%s 0\n" % " ".join(map(str, c)))
 
+    @staticmethod
+    def get_unrepeat_order(ls):
+        return list(OrderedDict.fromkeys(ls))
+
+    def __str__(self):
+        return f'cnf:\n\tclauses: {self.clauses}\n\tunique_sign: {self.unique_sign}\n\tdict: {self.dictionary}\n\tunit: {self.unit_clauses}'
+
 
 class Interpretation():
     """An interpretation is an assignment of the possible values to variables"""
 
-    def __init__(self, num_vars, vars, unit_clauses):
+    def __init__(self, num_vars, vars, cnf=None):
         """
         Initialization
         TODO
         """
         self.num_vars = num_vars
         self.vars = vars  # [None] * (self.num_vars + 1)
+        self.cnf: Optional[CNF] = cnf
 
     def cost(self):
         cost = 0
-        for c in cnf.clauses:
+        for c in self.cnf.clauses:
             length = len(c)
             for l in c:
                 if self.vars[abs(l)] == None or (l < 0 and self.vars[abs(l)] == 0) or (
@@ -170,6 +181,15 @@ class Interpretation():
         pass
 
 
+def coroutine(func):
+    def start(*args, **kwargs):
+        cr = func(*args, **kwargs)
+        cr.next()
+        return cr
+
+    return start
+
+
 class Solver():
     """The class Solver implements an algorithm to solve a given problem instance"""
 
@@ -182,6 +202,15 @@ class Solver():
         self.best_sol = None
         self.best_cost = cnf.num_clauses + 1
 
+    def get_last(self, order: List[int]):
+        for i in range(1, order[0]):
+            yield i
+        for p in range(0, len(order) - 1):
+            for i in range(order[p] + 1, order[p + 1]):
+                yield i
+        for i in range(order[-1] + 1, self.cnf.num_vars + 1):
+            yield i
+
     def solve(self):
         """
         Implements an algorithm to solve the instance of a problem
@@ -192,12 +221,25 @@ class Solver():
         Recursive?
         """
         curr_sol = self.cnf.unit_propagation()
+<<<<<<< HEAD
         num_order = len(self.cnf.unit_clauses)  # None - 0 - 1
         order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
         for i in range(0,len(order)-1):
             if order[i+1]-order[i] > 1: 
                 print(order[i]+1)
         
+=======
+        curr_sol.cnf = self.cnf
+        num_order = 1  # None - 0 - 1
+        order = self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
+        if order:
+            order = [0] + order + list(self.get_last(order))
+        else:
+            order = list(range(self.cnf.num_vars))
+        print(order)
+        print(self.cnf.clauses)
+        print(order)
+>>>>>>> 28bae28fdb88eddd3164f3e36ce233cd443666c9
         while num_order > 0:
             var = order[num_order]
             if curr_sol.vars[var] == 1:  # Backtrack
@@ -219,13 +261,7 @@ class Solver():
 
 
 # Main
-
-if __name__ == '__main__':
-    """
-    TODO
-    """
-
-    # Check parameters
+def main():
     if len(sys.argv) < 1 or len(sys.argv) > 2:
         sys.exit("Use: %s <cnf_instance>" % sys.argv[0])
 
@@ -236,9 +272,15 @@ if __name__ == '__main__':
 
     # Read cnf instance
     cnf = CNF(cnf_file_name)
+    print(cnf)
     # Create a solver instance with the problem to solve
     solver = Solver(cnf)
     # Solve the problem and get the best solution found
     best_sol = solver.solve()
     # Show the best solution found
     best_sol.show()
+
+
+if __name__ == '__main__':
+    # Check parameters
+    main()

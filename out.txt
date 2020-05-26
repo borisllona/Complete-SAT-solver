@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 99, in <module>
+    main()
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 87, in main
+    solution = backtracking(clauses, [], unit)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
+    solution = backtracking(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
+    solution = backtracking(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
+    solution = backtracking(bcp(formula, variable), assignment + [variable])
+  [Previous line repeated 35 more times]
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 69, in backtracking
+    variable = jeroslow_wang_2_sided(formula)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 78, in jeroslow_wang_2_sided
+    counter = get_weighted_abs_counter(formula)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 41, in get_weighted_abs_counter
+    counter[abs(literal)] += weight ** -len(clause)
+KeyboardInterrupt
+real 1.37
+user 1.33
+sys 0.02
