@@ -19,19 +19,19 @@ def parse(filename):
     return variables, clauses, unit_clauses
 
 
-def bcp(formula, unit):
-    modified = []
+def new_formula(formula, unit):
+    result = deque()
     for clause in formula:
         if unit in clause:
             continue
         if -unit in clause:
             new_clause = list(filter(lambda x: x != -unit, clause))
             if not new_clause:
-                return -1
-            modified.append(new_clause)
+                return 0
+            result.append(new_clause)
         else:
-            modified.append(clause)
-    return modified
+            result.append(clause)
+    return result
 
 
 @lru_cache(maxsize=512)
@@ -53,9 +53,9 @@ def unit_propagation(formula, unit_clauses=None):
         unit_clauses = [c for c in formula if len(c) == 1]
     while unit_clauses:
         unit = unit_clauses[0]
-        formula = bcp(formula, unit[0])
+        formula = new_formula(formula, unit[0])
         assignment.extend(unit)
-        if formula == -1 or not formula:
+        if not formula:
             return formula, assignment
         unit_clauses = [c for c in formula if len(c) == 1]
     return formula, assignment
@@ -63,14 +63,14 @@ def unit_propagation(formula, unit_clauses=None):
 
 def solve(formula, assignment, unit=None):
     formula, unit_assignment = unit_propagation(formula, unit)
-    if formula == - 1:
+    if formula == 0:
         return []
     assignment.extend(unit_assignment)
     if not formula:
         return assignment
     variable = get_literal(formula)
-    solution = solve(bcp(formula, variable), assignment + [variable])
-    return solution if solution else solve(bcp(formula, -variable), assignment + [-variable])
+    solution = solve(new_formula(formula, variable), assignment + [variable])
+    return solution if solution else solve(new_formula(formula, -variable), assignment + [-variable])
 
 
 def main():
