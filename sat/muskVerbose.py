@@ -34,19 +34,14 @@ def bcp(formula, unit):
     return modified
 
 
-@lru_cache(maxsize=512)
-def acc_weight(weight, len_clause):
-    return weight ** -len_clause
-
-
-def get_literal(formula, weight=3):
+def get_literal(formula, weight=2):
     counter = {}
     for clause in formula:
         for literal in clause:
             if abs(literal) in counter:
-                counter[abs(literal)] += acc_weight(weight, len(clause))
+                counter[abs(literal)] += weight ** -len(clause)
             else:
-                counter[abs(literal)] = acc_weight(weight, len(clause))
+                counter[abs(literal)] = weight ** -len(clause)
     return max(counter, key=counter.get)
 
 
@@ -78,6 +73,38 @@ def solve(formula, assignment, unit=None):
         solution = solve(bcp(formula, -variable), assignment + [-variable])
 
     return solution
+
+
+def jeroslow_wang_2_sided(formula):
+    return get_literal(formula)
+
+
+def get_weighted_counter(formula, weight=2):
+    counter = {}
+    occs = {}
+    for clause in formula:
+        for literal in clause:
+            if literal in counter:
+                counter[literal] += weight ** -len(clause)
+                occs[literal] += 1
+            else:
+                counter[literal] = weight ** -len(clause)
+                occs[literal] = 1
+    return counter, occs
+
+
+@lru_cache()
+def w(occ, count):
+    return occ * count
+
+
+def solver_satz(formula):
+    counter, occs = get_weighted_counter(formula)
+    h = {}
+    for i in counter.keys():
+        h[i] = w(occs[i], counter[i]) * w(occs[-i], counter[-i]) * 2 ** 10 + w(occs[i], counter[i]) + w(occs[-i],
+                                                                                                        counter[-i])
+    return max(h, key=h.get)
 
 
 def main():
