@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import lru_cache
 
 
 def parse(filename):
-    global variables
-    clauses = []
-    unit_clauses = []
+    clauses = deque()
+    unit_clauses = deque()
     for line in open(filename):
         if line[0] == 'p':
             variables = int(line.split()[2])
@@ -18,7 +17,7 @@ def parse(filename):
         if len(clause) == 1:
             unit_clauses.append(clause)
         clauses.append(clause)
-    return clauses, unit_clauses
+    return variables, clauses, unit_clauses
 
 
 def bcp(formula, unit):
@@ -70,18 +69,13 @@ def solve(formula, assignment, unit=None):
         return []
     if formula == []:
         return assignment
-
     variable = get_literal(formula)
     solution = solve(bcp(formula, variable), assignment + [variable])
-    if not solution:
-        solution = solve(bcp(formula, -variable), assignment + [-variable])
-
-    return solution
+    return solution if solution else solve(bcp(formula, -variable), assignment + [-variable])
 
 
 def main():
-    clauses, unit = parse(sys.argv[1])
-
+    variables, clauses, unit = parse(sys.argv[1])
     solution = solve(clauses, [], unit)
 
     if solution:

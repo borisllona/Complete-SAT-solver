@@ -1,22 +1,32 @@
 Traceback (most recent call last):
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 99, in <module>
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 92, in <module>
     main()
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 87, in main
-    solution = backtracking(clauses, [], unit)
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
-    solution = backtracking(bcp(formula, variable), assignment + [variable])
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
-    solution = backtracking(bcp(formula, variable), assignment + [variable])
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 70, in backtracking
-    solution = backtracking(bcp(formula, variable), assignment + [variable])
-  [Previous line repeated 35 more times]
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 69, in backtracking
-    variable = jeroslow_wang_2_sided(formula)
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 78, in jeroslow_wang_2_sided
-    counter = get_weighted_abs_counter(formula)
-  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 41, in get_weighted_abs_counter
-    counter[abs(literal)] += weight ** -len(clause)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 79, in main
+    solution = solve(clauses, [], unit)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  [Previous line repeated 99 more times]
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 74, in solve
+    return solution if solution else solve(bcp(formula, -variable), assignment + [-variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 73, in solve
+    solution = solve(bcp(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 74, in solve
+    return solution if solution else solve(bcp(formula, -variable), assignment + [-variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 66, in solve
+    formula, unit_assignment = unit_propagation(formula, unit)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 57, in unit_propagation
+    formula = bcp(formula, unit[0])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 25, in bcp
+    for clause in formula:
 KeyboardInterrupt
-real 1.37
-user 1.33
+real 2.94
+user 2.90
 sys 0.02
