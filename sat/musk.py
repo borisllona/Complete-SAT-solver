@@ -7,16 +7,16 @@ def parse(filename):
     clauses = []
     unit_clauses = []
     for line in open(filename):
-        if line.startswith('c'):
+        if line[0] == 'p':
+            variables = int(line.split()[2])
             continue
-        if line.startswith('p'):
-            n_vars = line.split()[2]
+        if line[0] == 'c':
             continue
         clause = [int(x) for x in line[:-2].split()]
         if len(clause) == 1:
             unit_clauses.append(clause)
         clauses.append(clause)
-    return clauses, int(n_vars), unit_clauses
+    return variables, clauses, unit_clauses
 
 
 def bcp(formula, unit):
@@ -34,7 +34,7 @@ def bcp(formula, unit):
     return modified
 
 
-def get_weighted_abs_counter(formula, weight=2):
+def get_literal(formula, weight=2):
     counter = {}
     for clause in formula:
         for literal in clause:
@@ -42,7 +42,7 @@ def get_weighted_abs_counter(formula, weight=2):
                 counter[abs(literal)] += weight ** -len(clause)
             else:
                 counter[abs(literal)] = weight ** -len(clause)
-    return counter
+    return max(counter, key=counter.get)
 
 
 def unit_propagation(formula, unit_clauses=None):
@@ -56,28 +56,29 @@ def unit_propagation(formula, unit_clauses=None):
         if formula == -1 or not formula:
             return formula, assignment
         unit_clauses = [c for c in formula if len(c) == 1]
-    return formula, assignment
+    return assignment, formula
 
 
-def backtracking(formula, assignment, unit=None):
-    formula, unit_assignment = unit_propagation(formula, unit)
-    assignment = assignment + unit_assignment
+def solve(formula, assignment, unit=None):
+    print('Inici', formula)
+    unit_assignment, formula = unit_propagation(formula, unit)
+    assignment += unit_assignment
+    print(formula)
     if formula == - 1:
         return []
-    if not formula:
+    if formula == []:
         return assignment
 
-    variable = solver_satz(formula)
-    solution = backtracking(bcp(formula, variable), assignment + [variable])
+    variable = get_literal(formula)
+    solution = solve(bcp(formula, variable), assignment + [variable])
     if not solution:
-        solution = backtracking(bcp(formula, -variable), assignment + [-variable])
+        solution = solve(bcp(formula, -variable), assignment + [-variable])
 
     return solution
 
 
 def jeroslow_wang_2_sided(formula):
-    counter = get_weighted_abs_counter(formula)
-    return max(counter, key=counter.get)
+    return get_literal(formula)
 
 
 def get_weighted_counter(formula, weight=2):
@@ -104,20 +105,21 @@ def solver_satz(formula):
     h = {}
     for i in counter.keys():
         h[i] = w(occs[i], counter[i]) * w(occs[-i], counter[-i]) * 2 ** 10 + w(occs[i], counter[i]) + w(occs[-i],
-                                                                                                      counter[-i])
+                                                                                                        counter[-i])
     return max(h, key=h.get)
 
 
 def main():
-    clauses, n_vars, unit = parse(sys.argv[1])
+    variables, clauses, unit = parse(sys.argv[1])
 
-    solution = backtracking(clauses, [], unit)
+    solution = solve(clauses, [], unit)
 
     if solution:
-        solution += [x for x in range(1, n_vars + 1) if x not in solution and -x not in solution]
+        fill = lambda i: i if i not in solution and -i not in solution else None
+        solution += list(filter(lambda x: x is not None, map(fill, range(1, variables + 1))))
+        # solution += [i for i in range(1, variables + 1) if i not in solution and -i not in solution]
         solution.sort(key=abs)
-        print('s SATISFIABLE')
-        print('v ' + ' '.join([str(x) for x in solution]) + ' 0')
+        print('s SATISFIABLE' + '\n' + 'v ' + ' '.join([str(x) for x in solution]) + ' 0')
     else:
         print('s UNSATISFIABLE')
 

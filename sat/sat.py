@@ -50,7 +50,7 @@ class CNF():
         self.pure_literal()
 
     def pure_literal(self):
-        return filter(lambda x: x[1] is not None, self.unique_sign)
+        return filter(not None, self.unique_sign)
 
     def unit_propagation(self) -> Interpretation:
         inter_vars = [None] * (self.num_vars + 1)
@@ -95,7 +95,7 @@ class CNF():
             if l.strip() == "":
                 continue
             sl = list(map(int, l.split()))
-            sl.pop()  # Remove last 0
+            sl.pop()
             if len(sl) == 0:
                 sys.stdout.write('\ns UNSATISFIABLE\n')
                 sys.exit()
@@ -221,6 +221,14 @@ class Solver():
         Recursive?
         """
         curr_sol = self.cnf.unit_propagation()
+<<<<<<< HEAD
+        num_order = len(self.cnf.unit_clauses)  # None - 0 - 1
+        order = self.cnf.unit_clauses # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
+        for i in range(0,len(order)-1):
+            if order[i+1]-order[i] > 1: 
+                print(order[i]+1)
+        
+=======
         curr_sol.cnf = self.cnf
         num_order = 1  # None - 0 - 1
         order = self.cnf.unit_clauses  # [1, 5, 7, 10] -> [2, 3, 4, 6, 8] [1,2,3,5]
@@ -231,6 +239,7 @@ class Solver():
         print(order)
         print(self.cnf.clauses)
         print(order)
+>>>>>>> 28bae28fdb88eddd3164f3e36ce233cd443666c9
         while num_order > 0:
             var = order[num_order]
             if curr_sol.vars[var] == 1:  # Backtrack
