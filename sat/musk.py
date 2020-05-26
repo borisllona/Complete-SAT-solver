@@ -63,11 +63,9 @@ def unit_propagation(formula, unit_clauses=None):
 
 def solve(formula, assignment, unit=None):
     formula, unit_assignment = unit_propagation(formula, unit)
-    if formula == 0:
-        return []
-    assignment.extend(unit_assignment)
     if not formula:
-        return assignment
+        return [] if formula == 0 else assignment
+    assignment.extend(unit_assignment)
     variable = get_literal(formula)
     solution = solve(new_formula(formula, variable), assignment + [variable])
     return solution if solution else solve(new_formula(formula, -variable), assignment + [-variable])
@@ -76,7 +74,6 @@ def solve(formula, assignment, unit=None):
 def main():
     variables, clauses, unit = parse(sys.argv[1])
     solution = solve(clauses, [], unit)
-
     if solution:
         fill = lambda i: i if i not in solution and -i not in solution else None
         solution.extend(filter(lambda x: x is not None, map(fill, range(1, variables + 1))))
