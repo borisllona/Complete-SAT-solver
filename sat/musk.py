@@ -5,6 +5,7 @@ from functools import lru_cache
 
 
 def parse(filename):
+    global variables
     clauses = []
     unit_clauses = []
     for line in open(filename):
@@ -17,7 +18,7 @@ def parse(filename):
         if len(clause) == 1:
             unit_clauses.append(clause)
         clauses.append(clause)
-    return variables, clauses, unit_clauses
+    return clauses, unit_clauses
 
 
 def bcp(formula, unit):
@@ -79,7 +80,7 @@ def solve(formula, assignment, unit=None):
 
 
 def main():
-    variables, clauses, unit = parse(sys.argv[1])
+    clauses, unit = parse(sys.argv[1])
 
     solution = solve(clauses, [], unit)
 
