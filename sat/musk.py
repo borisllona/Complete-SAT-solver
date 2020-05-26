@@ -5,8 +5,7 @@ from functools import lru_cache
 
 
 def parse(filename):
-    clauses = deque()
-    unit_clauses = deque()
+    clauses, unit_clauses = deque(), deque()
     for line in open(filename):
         if line[0] == 'p':
             variables = int(line.split()[2])
@@ -26,7 +25,7 @@ def bcp(formula, unit):
         if unit in clause:
             continue
         if -unit in clause:
-            new_clause = [x for x in clause if x != -unit]
+            new_clause = list(filter(lambda x: x != -unit, clause))
             if not new_clause:
                 return -1
             modified.append(new_clause)
@@ -49,7 +48,7 @@ def get_literal(formula, weight=3):
 
 
 def unit_propagation(formula, unit_clauses=None):
-    assignment = []
+    assignment = deque()
     if unit_clauses is None:
         unit_clauses = [c for c in formula if len(c) == 1]
     while unit_clauses:
