@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+from collections import defaultdict
 from functools import lru_cache
 
 
@@ -40,13 +41,10 @@ def acc_weight(weight, len_clause):
 
 
 def get_literal(formula, weight=3):
-    counter = {}
+    counter = defaultdict(float)
     for clause in formula:
         for literal in clause:
-            if abs(literal) in counter:
-                counter[abs(literal)] += acc_weight(weight, len(clause))
-            else:
-                counter[abs(literal)] = acc_weight(weight, len(clause))
+            counter[abs(literal)] += acc_weight(weight, len(clause))
     return max(counter, key=counter.get)
 
 
