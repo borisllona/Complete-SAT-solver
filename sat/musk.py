@@ -66,7 +66,7 @@ def solve(formula, assignment, unit=None):
     if formula == - 1:
         return []
     assignment.extend(unit_assignment)
-    if formula == []:
+    if not formula:
         return assignment
     variable = get_literal(formula)
     solution = solve(bcp(formula, variable), assignment + [variable])
@@ -80,9 +80,8 @@ def main():
     if solution:
         fill = lambda i: i if i not in solution and -i not in solution else None
         solution.extend(filter(lambda x: x is not None, map(fill, range(1, variables + 1))))
-        # solution += [i for i in range(1, variables + 1) if i not in solution and -i not in solution]
         solution.sort(key=abs)
-        print('s SATISFIABLE' + '\n' + 'v ' + ' '.join([str(x) for x in solution]) + ' 0')
+        print('s SATISFIABLE' + '\n' + 'v ' + ' '.join(str(x) for x in solution) + ' 0')
     else:
         print('s UNSATISFIABLE')
 
