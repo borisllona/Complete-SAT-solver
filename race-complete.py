@@ -11,7 +11,7 @@ import subprocess
 
 out_file = "out.txt" # Solver output
 limits_file = "tmp-limits.sh" # Limits script file
-timeout = 30 # Timeout for each run
+timeout = 10 # Timeout for each run
 inc_to = 2 # Multiplier for timeout
 inc_bug = 10000 # Multiplier for bug
 verbose = False # Verbose flag

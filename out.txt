@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 88, in <module>
+    main()
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 77, in main
+    solution = solve(clauses, [], unit)
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 71, in solve
+    solution = solve(new_formula(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 71, in solve
+    solution = solve(new_formula(formula, variable), assignment + [variable])
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 71, in solve
+    solution = solve(new_formula(formula, variable), assignment + [variable])
+  [Previous line repeated 29 more times]
+  File "/home/oriol/universitat/tercer/paia/k-sat-solver/sat/musk.py", line 27, in new_formula
+    if -unit in clause:
+KeyboardInterrupt
+real 1.39
+user 1.26
+sys 0.03

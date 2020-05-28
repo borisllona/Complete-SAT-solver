@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import sys
-from collections import defaultdict, deque
+from collections import defaultdict
 from functools import lru_cache
 
 
 def parse(filename):
-    clauses, unit_clauses = deque(), deque()
+    clauses, unit_clauses = [], []
     for line in open(filename):
         if line[0] == 'p':
             variables = int(line.split()[2])
@@ -13,10 +13,8 @@ def parse(filename):
         if line[0] == 'c':
             continue
         clause = [int(x) for x in line[:-2].split()]
-        if len(clause) == 1:
-            unit_clauses.append(clause)
         clauses.append(clause)
-    return variables, clauses, unit_clauses
+    return variables, clauses
 
 
 def new_formula(formula, unit):
@@ -47,14 +45,15 @@ def get_literal(formula, weight=3):
     return max(counter, key=counter.get)
 
 
-def unit_propagation(formula, unit_clauses=None):
+def unit_propagation(formula, unit=None):
     assignment = []
-    if unit_clauses is None:
-        unit_clauses = [c for c in formula if len(c) == 1]
+    unit_clauses = [c for c in formula if len(c) == 1]
     while unit_clauses:
         unit = unit_clauses[0]
         formula = new_formula(formula, unit[0])
-        assignment.extend(unit)
+        assignment += [unit[0]]
+        if formula == -1:
+            return -1, []
         if not formula:
             return formula, assignment
         unit_clauses = [c for c in formula if len(c) == 1]
@@ -64,22 +63,27 @@ def unit_propagation(formula, unit_clauses=None):
 
 def solve(formula, assignment, unit=None):
     formula, unit_assignment = unit_propagation(formula, unit)
-    assignment.extend(unit_assignment)
+    assignment = assignment + unit_assignment
+    if formula == 0:
+        return []
     if not formula:
-        return [] if formula == 0 else assignment
+        return assignment
     variable = get_literal(formula)
+    print(variable)
     solution = solve(new_formula(formula, variable), assignment + [variable])
-    return solution if solution else solve(new_formula(formula, -variable), assignment + [-variable])
+    if not solution:
+        solution = solve(new_formula(formula, -variable), assignment + [-variable])
+
+    return solution
 
 
 def main():
-    variables, clauses, unit = parse(sys.argv[1])
-    solution = solve(clauses, [], unit)
+    variables, clauses = parse(sys.argv[1])
+    solution = solve(clauses, [])
     if solution:
-        fill = lambda i: i if i not in solution and -i not in solution else None
-        solution.extend(filter(lambda x: x is not None, map(fill, range(1, variables + 1))))
+        solution += [x for x in range(1, variables + 1) if x not in solution and -x not in solution]
         solution.sort(key=abs)
-        print('s SATISFIABLE' + '\n' + 'v ' + ' '.join(str(x) for x in solution) + ' 0')
+        print('s SATISFIABLE' + '\n' + 'v ' + ' '.join([str(x) for x in solution]) + ' 0')
     else:
         print('s UNSATISFIABLE')
 
